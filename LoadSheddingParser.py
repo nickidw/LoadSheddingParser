@@ -166,4 +166,3 @@ loadshedding_data = {
 
 with open('loadshedding.json', 'w') as json_file:
     json.dump(loadshedding_data, cls=DateTimeEncoder, fp=json_file)
-print("")
