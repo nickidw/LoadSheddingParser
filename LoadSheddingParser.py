@@ -1,4 +1,6 @@
 from datetime import datetime
+import os
+import time
 from html.parser import HTMLParser
 import urllib.request
 import re
@@ -34,10 +36,11 @@ class LoadSheddingParser(HTMLParser):
         if (self.isLoadsheddingMsg and tag == 'div'):
             self.isLoadsheddingMsg = False
 
-
+os.environ['TZ'] = 'Africa/Johannesburg'
+time.tzset()
 date = datetime.now()
-time = date.time()
-hour = time.hour
+currentTime = date.time()
+hour = currentTime.hour
 
 try:
     with open("loadshedding.json", "r") as json_file:
@@ -58,62 +61,101 @@ parser.feed(content.decode("utf-8"))
 
 currentStage = 0
 
-
 message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00, then.Stage (\d) from (\d{2}):00 - (\d{2}):00 on (\w+)", parser.fullMsg)
 
 if (message):
     matches = message[0]
 
-    stage = int(matches[0])
-    stagefrom = int(matches[1])
-    stageto=int(matches[2])
+    schedule = {
+        'stage': int(message[0][0]),
+        'from': currentTime.hour,
+        'to': int(message[0][1])
+    }
+    schedules = [schedule]
 
-    if (len(matches) == 7):
-        stagenext=int(matches[3])
-        stagenextfrom=int(matches[4])
-        stagenextto=int(matches[5])
-        stagenextday=matches[6]
+    schedule = {
+        'stage': int(message[0][3]),
+        'from': int(message[0][4]),
+        'to': int(message[0][5])
+    }
+    schedules = [schedule]
 
-    if (stagefrom < stageto):
-        if (hour >= stagefrom and hour < stageto):
-            currentStage = stage
-
-    if (stagenextfrom > stagenextto):
-        if (hour >= stagenextfrom or hour < stagenextto):
-            currentStage = stagenext
-
-if (currentStage == 0):
+if (not message):
     message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00", parser.fullMsg)
 
     if (message):
-        matches = message[0]
+        schedule = {
+            'stage': int(message[0][0]),
+            'from': currentTime.hour,
+            'to': int(message[0][1])
+        }
+        schedules = [schedule]
 
-        stage = int(matches[0])
-        stagefrom = int(matches[1])
-        stageto=int(matches[2])
-
-        if (stagefrom < stageto):
-            if (hour >= stagefrom and hour < stageto):
-                currentStage = stage
-
-if (currentStage == 0):
+if (not message):
     message = re.findall("City customers on Stage (\d) until.(\d{2}):00 on Sunday, then Stage (\d) from (\d{2}):00 until.(\d{2}):00", parser.fullMsg)
 
     if (message):
-        matches = message[0]
+        schedule = {
+            'stage': int(message[0][0]),
+            'from': currentTime.hour,
+            'to': int(message[0][1])
+        }
+        schedules = [schedule]
 
-        stage = int(matches[0])
-        stageto = int(matches[1])
-        stagenext = int(matches[2])
-        stagenextfrom = int(matches[3])
-        stagenextto = int(matches[4])
+        schedule = {
+            'stage': int(message[0][2]),
+            'from': int(message[0][1]),
+            'to': int(message[0][3])
+        }
 
-        if (hour < stageto):
-            currentStage = stage
+        schedules.append(schedule)
 
-        if (stagenextfrom < stagenextto):
-            if (hour >= stagenextfrom and hour < stagenextto):
-                currentStage = stagenext
+if (not message):
+    message = re.findall("City customers on Stage (\d) until.(\d{2}):00, then Stage (\d) until (\d{2}):00..Stage (\d) from (\d{2}):00 - (\d{2}):00 and Stage (\d) from (\d{2}):00 - (\d{2}):00 on Monday..Check the schedule and be prepared for outages.", parser.fullMsg)
+
+    if (message):
+        schedule = {
+            'stage': int(message[0][0]),
+            'from': currentTime.hour,
+            'to': int(message[0][1])
+        }
+        schedules = [schedule]
+
+        schedule = {
+            'stage': int(message[0][2]),
+            'from': int(message[0][1]),
+            'to': int(message[0][3])
+        }
+
+        schedules.append(schedule)
+
+        schedule = {
+            'stage': int(message[0][4]),
+            'from': int(message[0][5]),
+            'to': int(message[0][6])
+        }
+
+        schedules.append(schedule)
+
+        schedule = {
+            'stage': int(message[0][7]),
+            'from': int(message[0][8]),
+            'to': int(message[0][9])
+        }
+
+        schedules.append(schedule)
+
+for item in schedules:
+    fromhour = item['from']
+    tohour = item['to']
+    if (fromhour < tohour):
+        if (hour >= fromhour and hour < tohour):
+            currentStage = item['stage']
+            break
+    if (fromhour > tohour):
+        if ((hour > fromhour and hour <= 23 ) or (hour >= 0 and hour < tohour)):
+            currentStage = item['stage']
+            break
 
 print("Stage ", currentStage)
 
