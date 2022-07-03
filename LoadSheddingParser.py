@@ -2,6 +2,14 @@ from datetime import datetime
 from html.parser import HTMLParser
 import urllib.request
 import re
+import json
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+
+        return json.JSONEncoder.default(self, o)
 
 class LoadSheddingParser(HTMLParser):
     isLoadsheddingMsg = False
@@ -26,12 +34,27 @@ class LoadSheddingParser(HTMLParser):
         if (self.isLoadsheddingMsg and tag == 'div'):
             self.isLoadsheddingMsg = False
 
+
+date = datetime.now()
+time = date.time()
+hour = time.hour
+
+with open("loadshedding.json", "r") as json_file:
+    if (json_file):
+        loadshedding_data = json.load(json_file)
+        lastdate = datetime.fromisoformat(loadshedding_data['timestamp'])
+        difference = date - lastdate
+        if (difference.seconds / 60 < 5):
+            print("Stage ", loadshedding_data['stage'])
+            exit(0)
+
 page = urllib.request.urlopen("https://www.capetown.gov.za/")
 content = page.read()
 parser = LoadSheddingParser()
 parser.feed(content.decode("utf-8"))
 
 currentStage = 0
+
 
 message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00, then.Stage (\d) from (\d{2}):00 - (\d{2}):00 on (\w+)", parser.fullMsg)
 
@@ -48,8 +71,6 @@ if (message):
         stagenextto=int(matches[5])
         stagenextday=matches[6]
 
-    time = datetime.now().time()
-    hour = time.hour
     if (stagefrom < stageto):
         if (hour >= stagefrom and hour < stageto):
             currentStage = stage
@@ -68,8 +89,6 @@ if (currentStage == 0):
         stagefrom = int(matches[1])
         stageto=int(matches[2])
 
-        time = datetime.now().time()
-        hour = time.hour
         if (stagefrom < stageto):
             if (hour >= stagefrom and hour < stageto):
                 currentStage = stage
@@ -86,8 +105,6 @@ if (currentStage == 0):
         stagenextfrom = int(matches[3])
         stagenextto = int(matches[4])
 
-        time = datetime.now().time()
-        hour = time.hour
         if (hour < stageto):
             currentStage = stage
 
@@ -96,3 +113,11 @@ if (currentStage == 0):
                 currentStage = stagenext
 
 print("Stage ", currentStage)
+
+loadshedding_data = {
+    'stage': currentStage,
+    'timestamp': date
+}
+
+with open('loadshedding.json', 'w') as json_file:
+    json.dump(loadshedding_data, cls=DateTimeEncoder, fp=json_file)
