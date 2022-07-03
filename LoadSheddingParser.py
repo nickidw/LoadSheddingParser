@@ -39,14 +39,17 @@ date = datetime.now()
 time = date.time()
 hour = time.hour
 
-with open("loadshedding.json", "r") as json_file:
-    if (json_file):
-        loadshedding_data = json.load(json_file)
-        lastdate = datetime.fromisoformat(loadshedding_data['timestamp'])
-        difference = date - lastdate
-        if (difference.seconds / 60 < 5):
-            print("Stage ", loadshedding_data['stage'])
-            exit(0)
+try:
+    with open("loadshedding.json", "r") as json_file:
+        if (json_file):
+            loadshedding_data = json.load(json_file)
+            lastdate = datetime.fromisoformat(loadshedding_data['timestamp'])
+            difference = date - lastdate
+            if (difference.seconds / 60 < 5):
+                print("Stage ", loadshedding_data['stage'])
+                exit(0)
+except FileNotFoundError:
+    currentStage = -1
 
 page = urllib.request.urlopen("https://www.capetown.gov.za/")
 content = page.read()
