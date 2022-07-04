@@ -66,7 +66,9 @@ def getMessage():
     parser.feed(content.decode("utf-8"))
     return parser.fullMsg
 
-def determineStage(fullMsg, currentHour):
+def determineStage(fullMsg, currentHour, weekday):
+    weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+
     message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00, then.Stage (\d) from (\d{2}):00 - (\d{2}):00 on (\w+)", 
                     fullMsg)
     currentStage = 0
@@ -83,7 +85,8 @@ def determineStage(fullMsg, currentHour):
         schedule = {
             'stage': int(message[0][3]),
             'from': int(message[0][4]),
-            'to': int(message[0][5])
+            'to': int(message[0][5]),
+            'weekDay': message[0][6]
         }
         schedules = [schedule]
 
@@ -100,7 +103,7 @@ def determineStage(fullMsg, currentHour):
             schedules = [schedule]
 
     if (not message):
-        message = re.findall("City customers on Stage (\d) until.(\d{2}):00 on Sunday, then Stage (\d) from (\d{2}):00 until.(\d{2}):00", 
+        message = re.findall("City customers on Stage (\d) until.(\d{2}):00 on (\w+), then Stage (\d) from (\d{2}):00 until.(\d{2}):00", 
                             fullMsg)
 
         if (message):
@@ -112,15 +115,15 @@ def determineStage(fullMsg, currentHour):
             schedules = [schedule]
 
             schedule = {
-                'stage': int(message[0][2]),
+                'stage': int(message[0][3]),
                 'from': int(message[0][1]),
-                'to': int(message[0][3])
+                'to': int(message[0][4])
             }
 
             schedules.append(schedule)
 
     if (not message):
-        message = re.findall("City customers on Stage (\d) until.(\d{2}):00, then Stage (\d) until (\d{2}):00..Stage (\d) from (\d{2}):00 - (\d{2}):00 and Stage (\d) from (\d{2}):00 - (\d{2}):00 on Monday..Check the schedule and be prepared for outages.", 
+        message = re.findall("City customers on Stage (\d) until.(\d{2}):00, then Stage (\d) until (\d{2}):00..Stage (\d) from (\d{2}):00 - (\d{2}):00 and Stage (\d) from (\d{2}):00 - (\d{2}):00 on (\w+)", 
                             fullMsg)
 
         if (message):
@@ -150,12 +153,14 @@ def determineStage(fullMsg, currentHour):
             schedule = {
                 'stage': int(message[0][7]),
                 'from': int(message[0][8]),
-                'to': int(message[0][9])
+                'to': int(message[0][9]),
+                'weekDay': message[0][10]
             }
 
             schedules.append(schedule)
 
     if (not message):
+        #City customers: Stage 4 underway until 00:00
         message = re.findall("City customers: Stage (\d) underway until (\d{2}):00", 
                         fullMsg)
 
@@ -187,8 +192,7 @@ def main():
     if (currentStage == -1):
         messsage = getMessage()
 
-        currentStage = determineStage(messsage, currentTime.time().hour)
-    print("Stage ", currentStage)
+        currentStage = determineStage(messsage, currentTime.time().hour, currentTime.weekday())
 
     loadshedding_data = {
         'stage': currentStage,
@@ -198,4 +202,4 @@ def main():
     with open('loadshedding.json', 'w') as json_file:
         json.dump(loadshedding_data, cls=DateTimeEncoder, fp=json_file)
 
-main()
+    return currentStage
