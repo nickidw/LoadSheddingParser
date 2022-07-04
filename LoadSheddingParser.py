@@ -67,7 +67,7 @@ def getMessage():
     return parser.fullMsg
 
 def determineStage(fullMsg, currentHour, weekday):
-    weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+    weekDays = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
     message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00, then.Stage (\d) from (\d{2}):00 - (\d{2}):00 on (\w+)", 
                     fullMsg)
@@ -160,6 +160,27 @@ def determineStage(fullMsg, currentHour, weekday):
             schedules.append(schedule)
 
     if (not message):
+        #City customers: Stage 4 underway until 00:00, Stage 2: from 00:00 until 05:00 on Tuesday
+        message=re.findall("City customers: Stage (\d) underway until (\d{2}):00, Stage (\d).*from (\d{2}):00 until.(\d{2}):00 on (\w+)", fullMsg)
+
+        if (message):
+            schedule = {
+                'stage': int(message[0][0]),
+                'from': currentHour,
+                'to': int(message[0][1]),
+                'weekDay': weekDays[weekDays.index(message[0][5])-1]
+            }
+            schedules = [schedule]
+
+            schedule = {
+                'stage': int(message[0][2]),
+                'from': int(message[0][3]),
+                'to': int(message[0][4]),
+                'weekDay': message[0][5]
+            }
+            schedules.append(schedule)
+
+    if (not message):
         #City customers: Stage 4 underway until 00:00
         message = re.findall("City customers: Stage (\d) underway until (\d{2}):00", 
                         fullMsg)
@@ -176,11 +197,11 @@ def determineStage(fullMsg, currentHour, weekday):
         fromhour = item['from']
         tohour = item['to']
         if (fromhour < tohour):
-            if (currentHour >= fromhour and currentHour < tohour):
+            if (currentHour >= fromhour and currentHour < tohour and weekday == weekDays.item(item['weekDay'])):
                 currentStage = item['stage']
                 break
         if (fromhour > tohour):
-            if ((currentHour >= fromhour and currentHour <= 23 ) or (currentHour >= 0 and currentHour < tohour)):
+            if (((currentHour >= fromhour and currentHour <= 23 ) or (currentHour >= 0 and currentHour < tohour)) and weekday == weekDays.index(item['weekDay'])):
                 currentStage = item['stage']
                 break
     return currentStage
