@@ -5,6 +5,7 @@ from html.parser import HTMLParser
 import urllib.request
 import re
 import json
+import platform
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, o):
@@ -37,7 +38,8 @@ class LoadSheddingParser(HTMLParser):
             self.isLoadsheddingMsg = False
 
 os.environ['TZ'] = 'Africa/Johannesburg'
-time.tzset()
+if (not platform.system() == 'Windows'):
+    time.tzset()
 date = datetime.now()
 currentTime = date.time()
 hour = currentTime.hour
@@ -145,6 +147,17 @@ if (not message):
 
         schedules.append(schedule)
 
+if (not message):
+    message = re.findall("City customers: Stage (\d) underway until (\d{2}):00", parser.fullMsg)
+
+    if (message):
+        schedule = {
+            'stage': int(message[0][0]),
+            'from': currentTime.hour,
+            'to': int(message[0][1])
+        }
+        schedules = [schedule]
+
 for item in schedules:
     fromhour = item['from']
     tohour = item['to']
@@ -153,7 +166,7 @@ for item in schedules:
             currentStage = item['stage']
             break
     if (fromhour > tohour):
-        if ((hour > fromhour and hour <= 23 ) or (hour >= 0 and hour < tohour)):
+        if ((hour >= fromhour and hour <= 23 ) or (hour >= 0 and hour < tohour)):
             currentStage = item['stage']
             break
 
