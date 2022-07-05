@@ -78,7 +78,8 @@ def determineStage(fullMsg, currentHour, weekday):
         schedule = {
             'stage': int(message[0][0]),
             'from': currentHour,
-            'to': int(message[0][1])
+            'to': int(message[0][1]),
+            'weekDay': weekDays[weekDays.index(message[0][6])-1]
         }
         schedules = [schedule]
 
@@ -91,14 +92,15 @@ def determineStage(fullMsg, currentHour, weekday):
         schedules = [schedule]
 
     if (not message):
-        message = re.findall("City customers on Stage (\d) from (\d{2}):00 -.(\d{2}):00", 
+        message = re.findall("City customers.*Stage (\d) from (\d{2}):00 -.(\d{2}):00", 
                     fullMsg)
 
         if (message):
             schedule = {
                 'stage': int(message[0][0]),
                 'from': currentHour,
-                'to': int(message[0][1])
+                'to': int(message[0][1]),
+                'weekDay': weekDays[weekday]
             }
             schedules = [schedule]
 
@@ -145,7 +147,8 @@ def determineStage(fullMsg, currentHour, weekday):
             schedule = {
                 'stage': int(message[0][4]),
                 'from': int(message[0][5]),
-                'to': int(message[0][6])
+                'to': int(message[0][6]),
+                'weekDay': message[0][10]
             }
 
             schedules.append(schedule)
@@ -160,7 +163,7 @@ def determineStage(fullMsg, currentHour, weekday):
             schedules.append(schedule)
 
     if (not message):
-        #City customers: Stage 4 underway until 00:00, Stage 2: from 00:00 until 05:00 on Tuesday
+        #City customers: Stage 4 underway until 00:00, Stage 2: from 00:00 until 05:00 on Tuesday (and Stage 4 from 05:00 - 16:00)*
         message=re.findall("City customers: Stage (\d) underway until (\d{2}):00, Stage (\d).*from (\d{2}):00 until.(\d{2}):00 on (\w+)", fullMsg)
 
         if (message):
