@@ -257,12 +257,12 @@ def main():
 
         currentStage = determineStage(messsage, currentTime.time().hour, currentTime.weekday())
 
-    loadshedding_data = {
-        'stage': currentStage,
-        'timestamp': currentTime
-    }
+        loadshedding_data = {
+            'stage': currentStage,
+            'timestamp': currentTime
+        }
 
-    with open('loadshedding.json', 'w') as json_file:
-        json.dump(loadshedding_data, cls=DateTimeEncoder, fp=json_file)
+        with open('loadshedding.json', 'w') as json_file:
+            json.dump(loadshedding_data, cls=DateTimeEncoder, fp=json_file)
 
     return currentStage
