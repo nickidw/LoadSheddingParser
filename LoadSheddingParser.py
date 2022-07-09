@@ -17,11 +17,23 @@ class DateTimeEncoder(json.JSONEncoder):
 
 #parse the html and extract the loadshedding alert message
 class LoadSheddingParser(HTMLParser):
+    in1stdiv = False
+    in1stP = False
+    in1stB = False
+    isLoadsheddingDiv = False
     isLoadsheddingMsg = False
     isLoadsheddingP = False
     fullMsg = ""
     def handle_starttag(self, tag, attrs):
-        if (tag == 'div'):
+        if (tag == 'div' and not self.in1stdiv):
+            for key,value in attrs:
+                if (key == 'class' and value=='desc'):
+                    self.in1stdiv = True
+        if (tag == 'p' and self.in1stdiv):
+            self.in1stP = True
+        if (tag == 'b' and self.in1stP):
+            self.in1stB = True
+        if (tag == 'div' and self.in1stdiv):
             for key,value in attrs:
                 if (key == 'class' and value=='alertBody'):
                     self.isLoadsheddingMsg = True
@@ -29,7 +41,10 @@ class LoadSheddingParser(HTMLParser):
             self.isLoadsheddingP = True
 
     def handle_data(self, data):
-        if (self.isLoadsheddingP):
+        if (self.in1stB):
+            if (data.find("Eskom") > -1):
+                self.isLoadsheddingDiv = True
+        if (self.isLoadsheddingP and self.isLoadsheddingDiv):
             self.fullMsg += data
 
     def handle_endtag(self, tag):
@@ -37,7 +52,10 @@ class LoadSheddingParser(HTMLParser):
             self.isLoadsheddingP = False
         if (self.isLoadsheddingMsg and tag == 'div'):
             self.isLoadsheddingMsg = False
-
+            self.isLoadsheddingDiv = False
+            self.in1stB = False
+            self.in1stP = False
+            self.in1stdiv = False
 
 def getCurrentTime():
     os.environ['TZ'] = 'Africa/Johannesburg'
