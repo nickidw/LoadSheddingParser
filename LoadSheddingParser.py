@@ -92,7 +92,7 @@ def determineStage(fullMsg, currentHour, weekday):
         schedules = [schedule]
 
     if (not message):
-        message = re.findall("City customers.*Stage (\d) from (\d{2}):00 -.(\d{2}):00", 
+        message = re.findall("City customers.*Stage (\d) from (\d{2}):00 -.(\d{2}):00.Check", 
                     fullMsg)
 
         if (message):
@@ -184,6 +184,27 @@ def determineStage(fullMsg, currentHour, weekday):
             schedules.append(schedule)
 
     if (not message):
+        #City customers: Stage 2 underway until 22:00 and Stage 3 from 22:00 - 24:00.
+        message = re.findall("City customers:.Stage (\d) underway until (\d{2}):00 and Stage (\d) from (\d{2}):00 - (\d{2}):00..Check", fullMsg)
+
+        if (message):
+            schedule = {
+                'stage': int(message[0][0]),
+                'from': currentHour,
+                'to': int(message[0][1]),
+                'weekDay': weekDays[weekday]
+            }
+            schedules = [schedule]
+
+            schedule = {
+                'stage': int(message[0][2]),
+                'from': int(message[0][3]),
+                'to': int(message[0][4]),
+                'weekDay': weekDays[weekday]
+            }
+            schedules.append(schedule)
+
+    if (not message):
         #City customers: Stage 4 underway until 00:00
         message = re.findall("City customers: Stage (\d) underway until (\d{2}):00", 
                         fullMsg)
@@ -200,7 +221,7 @@ def determineStage(fullMsg, currentHour, weekday):
         fromhour = item['from']
         tohour = item['to']
         if (fromhour < tohour):
-            if (currentHour >= fromhour and currentHour < tohour and weekday == weekDays.item(item['weekDay'])):
+            if (currentHour >= fromhour and currentHour < tohour and weekday == weekDays.index(item['weekDay'])):
                 currentStage = item['stage']
                 break
         if (fromhour > tohour):
