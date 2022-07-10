@@ -118,10 +118,31 @@ def determineStage(fullMsg, currentHour, weekday):
                 'stage': int(message[0][0]),
                 'from': currentHour,
                 'to': int(message[0][1]),
+                'weekDay': int(message[0][1])
+            }
+            schedules = [schedule]
+
+    if (not message):
+        #City customers: Stage 2 from 00:00 - 16:00 and Stage 3 from 16:00 - 24:00
+        message = re.findall("City customers:.Stage (\d) from (\d{2}):00 -.(\d{2}):00 and Stage (\d) from (\d{2}):00 - (\d{2}):00", fullMsg)
+
+        if (message):
+            schedule = {
+                'stage': int(message[0][0]),
+                'from': int(message[0][1]),
+                'to': int(message[0][2]),
                 'weekDay': weekDays[weekday]
             }
             schedules = [schedule]
 
+            schedule = {
+                'stage': int(message[0][3]),
+                'from': int(message[0][4]),
+                'to': int(message[0][5]),
+                'weekDay': weekDays[weekday]
+            }
+
+            schedules.append(schedule)            
     if (not message):
         message = re.findall("City customers on Stage (\d) until.(\d{2}):00 on (\w+), then Stage (\d) from (\d{2}):00 until.(\d{2}):00", 
                             fullMsg)
