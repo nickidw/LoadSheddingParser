@@ -34,12 +34,11 @@ def main():
         finsh = coct1.iloc[i]["finsh"]
         stage = coct1.iloc[i]["stage"]
 
-        if stage <= currentstage+5:
-            if nowutc > start and nowutc < finsh:
-                print(f"In loadshedding From {start} to {finsh} stage {stage}")
-            if prevstart < nowutc and start > nowutc:
-                print(f"Next loadshedding From {start} to {finsh} stage {stage}")
-            if start > nowutc and prevstart > nowutc:
-                print(f"Upcoming loadshedding From {start} to {finsh} stage {stage}")
-            prevstart = start
+        if nowutc > start and nowutc < finsh:
+            print(f"In loadshedding From {start} to {finsh} stage {stage}")
+        if prevstart < nowutc and start > nowutc:
+            print(f"Next loadshedding From {start} to {finsh} stage {stage}")
+        if start > nowutc and prevstart > nowutc:
+            print(f"Upcoming loadshedding From {start} to {finsh} stage {stage}")
+        prevstart = start
 main()
