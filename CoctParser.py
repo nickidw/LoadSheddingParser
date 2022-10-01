@@ -19,6 +19,7 @@ def main():
                 coct = True
         if coct:
             if change['start'] < now and change['finsh'] > now:
+                currentstage = change['stage']
                 print(change['stage'])
  
     utc = pytz.timezone('Africa/Johannesburg')
@@ -31,10 +32,14 @@ def main():
     for i in range(coct1.index.size-1):
         start = coct1.iloc[i]["start"]
         finsh = coct1.iloc[i]["finsh"]
+        stage = coct1.iloc[i]["stage"]
 
-        if nowutc > start and nowutc < finsh:
-            print(f"In loadshedding From {start} to {finsh}")
-        if prevstart < nowutc and start > nowutc:
-            print(f"Next loadshedding From {start} to {finsh}")
-        prevstart = start
+        if stage <= currentstage+5:
+            if nowutc > start and nowutc < finsh:
+                print(f"In loadshedding From {start} to {finsh} stage {stage}")
+            if prevstart < nowutc and start > nowutc:
+                print(f"Next loadshedding From {start} to {finsh} stage {stage}")
+            if start > nowutc and prevstart > nowutc:
+                print(f"Upcoming loadshedding From {start} to {finsh} stage {stage}")
+            prevstart = start
 main()
