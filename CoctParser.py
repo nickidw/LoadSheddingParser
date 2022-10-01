@@ -30,9 +30,10 @@ def main():
     coct1 = df[df['area_name'].str.endswith('city-of-cape-town-area-1')]
     prevstart = nowutc
     for i in range(coct1.index.size-1):
-        start = coct1.iloc[i]["start"]
-        finsh = coct1.iloc[i]["finsh"]
-        stage = coct1.iloc[i]["stage"]
+        instance = coct1.iloc[i]
+        start = instance["start"]
+        finsh = instance["finsh"]
+        stage = instance["stage"]
 
         if nowutc > start and nowutc < finsh:
             print(f"In loadshedding From {start} to {finsh} stage {stage}")
