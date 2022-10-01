@@ -20,7 +20,7 @@ def main():
         if coct:
             if change['start'] < now and change['finsh'] > now:
                 currentstage = change['stage']
-                print(change['stage'])
+                print(f"Current stage {currentstage}")
  
     utc = pytz.timezone('Africa/Johannesburg')
     nowutc = utc.localize(now)
