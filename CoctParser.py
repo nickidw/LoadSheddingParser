@@ -29,17 +29,36 @@ def main():
     df = pd.read_csv(url, parse_dates=['start', 'finsh'])
     coct1 = df[df['area_name'].str.endswith('city-of-cape-town-area-1')]
     prevstart = nowutc
-    for i in range(coct1.index.size-1):
-        instance = coct1.iloc[i]
+    current = "None"
+    nextslot = "None"
+    upcoming = ""
+
+    for i in range(coct1.index.size):
+        instance = coct1.iloc[i-1]
         start = instance["start"]
         finsh = instance["finsh"]
         stage = instance["stage"]
 
         if nowutc > start and nowutc < finsh:
-            print(f"In loadshedding From {start} to {finsh} stage {stage}")
-        if prevstart < nowutc and start > nowutc:
-            print(f"Next loadshedding From {start} to {finsh} stage {stage}")
+            current = f"In loadshedding From {start} to {finsh} stage {stage}"
+        if prevstart <= nowutc and start > nowutc:
+            nextslot = f"Next loadshedding From {start} to {finsh} stage {stage}"
         if start > nowutc and prevstart > nowutc:
-            print(f"Upcoming loadshedding From {start} to {finsh} stage {stage}")
+            upcoming += f"Upcoming loadshedding From {start} to {finsh} stage {stage}\n"
         prevstart = start
+
+    attrs = {
+            "attributes": {"current": current,
+            "next": nextslot,
+            "upcoming": upcoming},
+
+        }
+    data = {
+        "data": {"stage": currentstage},
+        "attributes": attrs["attributes"],
+
+    }
+    print(data)
+    print(data["data"])
+    print(data["attributes"])
 main()
